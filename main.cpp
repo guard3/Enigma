@@ -32,7 +32,7 @@ int main()
 						return 0;
 					case 'R':
 					case 'r':
-						puts("Reload tba");
+						cEnigma::ReloadSettings();
 						break;
 					case 'N':
 					case 'n':

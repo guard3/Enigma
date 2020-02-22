@@ -38,6 +38,46 @@ char (&cEnigma::reflector)[94] = *reinterpret_cast<char(*)[94]>(settings[5]);
 
 int cEnigma::rot = 0;
 
+void cEnigma::Backup()
+{
+	word (&src)[NUM_COPY] =  *reinterpret_cast<word(*)[NUM_COPY]>(settings[1]);
+	word (&dest)[NUM_COPY] = *reinterpret_cast<word(*)[NUM_COPY]>(settings[6]);
+	for (int i = 0; i < NUM_COPY; ++i)
+		dest[i] = src[i];
+	/* Back up rotors for resetting later */
+	/*
+	word
+		*src  = reinterpret_cast<word*>(settings[1]),
+		*dest = reinterpret_cast<word*>(settings[6]);
+	for (int i = 0; i < NUM_COPY; ++i)
+		*dest++ = *src++;*/
+}
+
+void cEnigma::ReloadSettings()
+{
+	/* Open settings file */
+	FILE* f = fopen("enigma.set", "rb");
+	if (!f)
+	{
+		puts("Could not reload settings file.");
+		puts("Settings file is missing.");
+		return;
+	}
+	
+	/* Load contents */
+	auto itemsRead = fread(settings, 94, 6, f);
+	fclose(f);
+	if (itemsRead != 6)
+	{
+		puts("Could not reload settings file.");
+		puts("Invalid size of settings file.");
+		return;
+	}
+	Backup();
+	fputs("Settings file ", stdout);
+	puts("reloaded.");
+}
+
 bool cEnigma::Initialize()
 {
 	/* Try to open settings file */

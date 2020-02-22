@@ -14,7 +14,11 @@ private:
 	
 	static int  rot;
 	
+	static void Backup();
+	
 public:
+	static bool CreateSettings();
+	static void ReloadSettings();
 	static bool Initialize();
 	static void Reset();
 	static inline char Cypher(const char c)
