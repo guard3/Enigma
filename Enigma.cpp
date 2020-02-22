@@ -194,11 +194,21 @@ bool cEnigma::Initialize()
 
 void cEnigma::Reset()
 {
-	/* Restore rotors from back up */
-	word
-		*src  = reinterpret_cast<word*>(settings[6]),
-		*dest = reinterpret_cast<word*>(settings[1]);
-	for (int i = 0; i < NUM_COPY; ++i)
-		*dest++ = *src++;
 	rot = 0;
+	word (&src)[NUM_COPY]  = *reinterpret_cast<word(*)[NUM_COPY]>(settings[6]);
+	word (&dest)[NUM_COPY] = *reinterpret_cast<word(*)[NUM_COPY]>(settings[1]);
+	for (int i = 0; i < NUM_COPY; ++i)
+		dest[i] = src[i];
+}
+
+void cEnigma::PrintHelp()
+{
+	puts(
+		"\n"
+		"Commands:\n"
+		"  ~h ~H    Show help menu\n"
+		"  ~r ~R    Reload settings file\n"
+		"  ~n ~N    Create a new settings file\n"
+		"  ~q ~Q    Quit"
+	);
 }

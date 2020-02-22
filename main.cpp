@@ -6,6 +6,7 @@ int main()
 {
 	/* Initialize Enigma */
 	puts("Enigma - by guard3");
+	puts("Type '~h' or '~H' to show help menu.");
 	putchar('\n');
 	if (!cEnigma::Initialize())
 		return 1;
@@ -43,10 +44,11 @@ int main()
 						break;
 					case 'H':
 					case 'h':
-						puts("Help tba");
+						cEnigma::PrintHelp();
 						break;
 					default:
 						puts("Invalid command.");
+						puts("Type '~h' or '~H' to show help menu.");
 				}
 			}
 			else
@@ -65,6 +67,7 @@ int main()
 #endif
 				}
 				puts("Invalid command.");
+				puts("Type '~h' or '~H' to show help menu.");
 			}
 			putchar('\n');
 		}
@@ -82,7 +85,6 @@ int main()
 			putchar('\n');
 			putchar('\n');
 		}
-		
 	}
 	return 0;
 }

@@ -21,6 +21,7 @@ public:
 	static void ReloadSettings();
 	static bool Initialize();
 	static void Reset();
+	static void PrintHelp();
 	static inline char Cypher(const char c)
 	{
 		if (c < ' ' || c > '}')
