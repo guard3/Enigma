@@ -40,17 +40,98 @@ int cEnigma::rot = 0;
 
 void cEnigma::Backup()
 {
-	word (&src)[NUM_COPY] =  *reinterpret_cast<word(*)[NUM_COPY]>(settings[1]);
+	word (&src)[NUM_COPY]  = *reinterpret_cast<word(*)[NUM_COPY]>(settings[1]);
 	word (&dest)[NUM_COPY] = *reinterpret_cast<word(*)[NUM_COPY]>(settings[6]);
 	for (int i = 0; i < NUM_COPY; ++i)
 		dest[i] = src[i];
-	/* Back up rotors for resetting later */
-	/*
-	word
-		*src  = reinterpret_cast<word*>(settings[1]),
-		*dest = reinterpret_cast<word*>(settings[6]);
-	for (int i = 0; i < NUM_COPY; ++i)
-		*dest++ = *src++;*/
+}
+
+bool cEnigma::CreateSettings()
+{
+	int i, j;
+	
+	/* Useful lambdas */
+	auto Shuffle = [&i, &j](char* table) {
+		for (i = 93; i > 0; --i)
+		{
+			static char c;
+			j = rand() % (i + 1);
+			c = table[j];
+			table[j] = table[i];
+			table[i] = c;
+		}
+	};
+	auto MakeRotorXb = [&i](char* table) {
+		char (&t)[94] = *reinterpret_cast<char(*)[94]>(table - 94);
+		for (i = 0; i < 94; ++i)
+			table[t[i]] = i;
+	};
+	
+	/* Fill settings[1] with 0...93 */
+	for (i = 0; i < 94; ++i)
+		settings[1][i] = i;
+	
+	/* Shuffle settings[1] and copy to settings[3] */
+	for (i = 93; i > 0; --i)
+	{
+		j = rand() % (i + 1);
+		settings[3][i] = settings[1][j];
+		settings[1][j] = settings[1][i];
+		settings[1][i] = settings[3][i];
+	}
+	settings[3][0] = settings[1][0];
+	
+	/* Create match pair for the reflector */
+	char (&t)[47][2] = *reinterpret_cast<char(*)[47][2]>(settings[1]);
+	for (i = 0; i < 47; ++i)
+	{
+		reflector[t[i][0]] = t[i][1];
+		reflector[t[i][1]] = t[i][0];
+	}
+	
+	/* Reshuffle settings[1] and create pair match for plugboard */
+	Shuffle(settings[1]);
+	j = rand() % 47;
+	for (i = 0; i < j; ++i)
+	{
+		plugboard[t[i][0]] = t[i][1];
+		plugboard[t[i][1]] = t[i][0];
+	}
+	for (i = 2 * i; i < 94; ++i)
+		plugboard[settings[1][i]] = settings[1][i];
+	
+	/* Prepare rotors */
+	Shuffle(rotor1a);
+	Shuffle(rotor2a);
+	MakeRotorXb(rotor1b);
+	MakeRotorXb(rotor2b);
+	
+	/* Write to file */
+	FILE* f = fopen("enigma.set", "wb");
+	if (!f)
+	{
+		puts("Could not initialize Enigma.");
+		puts("Unable to create settings file.");
+		return false;
+	}
+	auto itemsWritten = fwrite(settings, 94, 6, f);
+	fclose(f);
+	if (itemsWritten != 6)
+	{
+		puts("Could not initialize Enigma.");
+		puts("Creating settings file was interrupted.");
+		
+		/* Delete faulty file */
+		remove("enigma.set");
+		return false;
+	}
+	Backup();
+	
+	/* Print confirmation message */
+	fputs("Settings file ", stdout);
+	puts("created.");
+	
+	return true;
 }
 
 void cEnigma::ReloadSettings()
@@ -74,124 +155,40 @@ void cEnigma::ReloadSettings()
 		return;
 	}
 	Backup();
+	
+	/* Print confirmation message */
 	fputs("Settings file ", stdout);
 	puts("reloaded.");
 }
 
 bool cEnigma::Initialize()
 {
+	/* Seed random engine */
+	srand(static_cast<unsigned int>(time(nullptr)));
+	
 	/* Try to open settings file */
 	FILE* f = fopen("enigma.set", "rb");
-	if (f)
+	if (!f)
 	{
-		/* Settings file is open, so we simply load it */
-		auto itemsRead = fread(settings, 94, 6, f);
-		fclose(f);
-		if (itemsRead != 6)
-		{
-			puts("Could not initialize Enigma.");
-			puts("Invalid size of settings file.");
-			return false;
-		}
-		
-		/* Print confirmation message */
-		fputs("Settings file ", stdout);
-		puts("loaded.");
-	}
-	else
-	{
-		/* Settings file is not open, so we create it */
-		int i, j;
-		srand(static_cast<unsigned int>(time(nullptr)));
-		
-		/* Useful lambdas */
-		auto Shuffle = [&i, &j](char* table) {
-			for (i = 93; i > 0; --i)
-			{
-				static char c;
-				j = rand() % (i + 1);
-				c = table[j];
-				table[j] = table[i];
-				table[i] = c;
-			}
-		};
-		auto MakeRotorXb = [&i](char* table) {
-			char (&t)[94] = *reinterpret_cast<char(*)[94]>(table - 94);
-			for (i = 0; i < 94; ++i)
-				table[t[i]] = i;
-		};
-		
-		/* Fill settings[1] with 0...93 */
-		for (i = 0; i < 94; ++i)
-			settings[1][i] = i;
-		
-		/* Shuffle settings[1] and copy to settings[3] */
-		for (i = 93; i > 0; --i)
-		{
-			j = rand() % (i + 1);
-			settings[3][i] = settings[1][j];
-			settings[1][j] = settings[1][i];
-			settings[1][i] = settings[3][i];
-		}
-		settings[3][0] = settings[1][0];
-		
-		/* Create match pair for the reflector */
-		char (&t)[47][2] = *reinterpret_cast<char(*)[47][2]>(settings[1]);
-		for (i = 0; i < 47; ++i)
-		{
-			reflector[t[i][0]] = t[i][1];
-			reflector[t[i][1]] = t[i][0];
-		}
-		
-		/* Reshuffle settings[1] and create pair match for plugboard */
-		Shuffle(settings[1]);
-		j = rand() % 47;
-		for (i = 0; i < j; ++i)
-		{
-			plugboard[t[i][0]] = t[i][1];
-			plugboard[t[i][1]] = t[i][0];
-		}
-		for (i = 2 * i; i < 94; ++i)
-			plugboard[settings[1][i]] = settings[1][i];
-		
-		/* Prepare rotors */
-		Shuffle(rotor1a);
-		Shuffle(rotor2a);
-		MakeRotorXb(rotor1b);
-		MakeRotorXb(rotor2b);
-		
-		/* Write to file */
-		f = fopen("enigma.set", "wb");
-		if (!f)
-		{
-			puts("Could not initialize Enigma.");
-			puts("Unable to create settings file.");
-			return false;
-		}
-		auto itemsWritten = fwrite(settings, 94, 6, f);
-		fclose(f);
-		if (itemsWritten != 6)
-		{
-			puts("Could not initialize Enigma.");
-			puts("Creating settings file was interrupted.");
-			
-			/* Delete faulty file */
-			remove("enigma.set");
-			return false;
-		}
-		
-		/* Print confirmation message */;
-		fputs("Settings file ", stdout);
-		puts("created.");
+		/* Settings file can't be opened, so we create a new one */
+		return CreateSettings();
 	}
 	
-	/* Back up rotors for resetting later */
-	word
-		*src  = reinterpret_cast<word*>(settings[1]),
-		*dest = reinterpret_cast<word*>(settings[6]);
-	for (int i = 0; i < NUM_COPY; ++i)
-		*dest++ = *src++;
+	/* Settings file is open, so we simply load it */
+	auto itemsRead = fread(settings, 94, 6, f);
+	fclose(f);
+	if (itemsRead != 6)
+	{
+		puts("Could not initialize Enigma.");
+		puts("Invalid size of settings file.");
+		return false;
+	}
+	Backup();
 	
+	/* Print confirmation message */
+	fputs("Settings file ", stdout);
+	puts("loaded.");
+
 	return true;
 }
 

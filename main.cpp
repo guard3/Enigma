@@ -1,12 +1,14 @@
-#include <iostream>
 #include "Enigma.h"
+
+#include <stdio.h>
 
 int main()
 {
 	/* Initialize Enigma */
 	puts("Enigma - by guard3");
 	putchar('\n');
-	cEnigma::Initialize();
+	if (!cEnigma::Initialize())
+		return 1;
 	
 	for (;;)
 	{
@@ -36,7 +38,8 @@ int main()
 						break;
 					case 'N':
 					case 'n':
-						puts("New tba");
+						if (!cEnigma::CreateSettings())
+							return 2;
 						break;
 					case 'H':
 					case 'h':
