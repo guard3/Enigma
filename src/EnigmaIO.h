@@ -19,6 +19,8 @@ public:
 
 	static bool Initialize();
 
+	static inline void Flush() { while (ReadChar() != '\n'); }
+
 	static inline void WriteChar(const char c) { WriteConsoleA(hOut, &c, 1, NULL, NULL); }
 	template<DWORD size>
 	static inline void Write(const char(&str)[size]) { WriteConsoleA(hOut, str, size - 1, NULL, NULL); }
@@ -31,6 +33,8 @@ public:
 		ReadConsoleA(hIn, &c, 1, &temp, NULL);
 		return c;
 	}
+	template<DWORD size>
+	static inline void Read(char(&str)[size]) { ReadConsoleA(hIn, str, size, &temp, NULL); }
 };
 #else
 #include <stdio.h>

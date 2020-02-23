@@ -234,7 +234,7 @@ bool cConsole::Initialize()
 	if (GetConsoleScreenBufferInfo(hOut, &csbi) == 0)
 		return false;
 	defaultTextAttributes = csbi.wAttributes;
-	
+
 	return true;
 }
 

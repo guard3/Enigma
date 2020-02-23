@@ -24,7 +24,6 @@ int main()
 		cConsole::Write(">>> ");
 		
 		/* Check the first char from stdin for command escape character */
-		//c = getchar();
 		c = cConsole::ReadChar();
 		if (c == '\n')
 			continue;
@@ -32,8 +31,12 @@ int main()
 		{
 			/* Command mode is triggered */
 			char b[3];
-			fgets(b, 3, stdin);
+			cConsole::Read(b);
+#ifdef _WIN32
+			if (b[1] == '\r')
+#else
 			if (b[1] == '\n')
+#endif
 			{
 				/* If only one char was read */
 				switch (b[0])
@@ -55,15 +58,19 @@ int main()
 						cEnigma::PrintHelp();
 						break;
 					default:
-						cConsole::WriteLine("Invalid command.");
+						cConsole::WriteLine("Invalid commannd.");
 						cConsole::WriteLine("Type '~h' or '~H' to show help menu.");
 				}
 			}
 			else
 			{
 				/* If more than one chars are input, clear stdin */
+#ifdef _WIN32
+				if (b[1] != '\n')
+#else
 				if (b[1] != 0)
-					while (getchar() != '\n');
+#endif
+					cConsole::Flush();
 
 				cConsole::WriteLine("Invalid command.");
 				cConsole::WriteLine("Type '~h' or '~H' to show help menu.");
@@ -76,7 +83,7 @@ int main()
 			cConsole::WriteChar(cEnigma::Cypher(c));
 			
 			/* Cypher the rest from stdin */
-			while ((c = getchar()) != '\n')
+			while ((c = cConsole::ReadChar()) != '\n')
 				cConsole::WriteChar(cEnigma::Cypher(c));
 			
 			/* Reset enigma for next input */
