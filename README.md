@@ -1,5 +1,5 @@
 # Enigma
-A simple and fast C++ interpretation of an [Enigma machine](https://en.wikipedia.org/wiki/Enigma_machine), with support for 94 [ASCII](https://www.asciitable.com) characters and 2 rotors. Created just for fun! :stuck_out_tongue_winking_eye:\
+A simple and fast C++ implementation of an [Enigma machine](https://en.wikipedia.org/wiki/Enigma_machine), with support for 94 [ASCII](https://www.asciitable.com) characters and 2 rotors. Created just for fun! :stuck_out_tongue_winking_eye:\
 ![Usage example](https://cdn.discordapp.com/attachments/443429038355120128/681206772819689490/enigma.png)
 ## Getting Started
 To simply get **Enigma** up and running, download an executable from the **bin/** folder, depending on your platform. Though not necessary, it's recommended that you add the executable path to **$PATH**([Windows](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/)/[Linux](https://opensource.com/article/17/6/set-path-linux)).
