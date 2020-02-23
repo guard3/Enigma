@@ -2,7 +2,6 @@
 #include "EnigmaIO.h"
 #include <stdlib.h>
 #include <time.h>
-//#include <stdio.h>
 #include <stdint.h>
 
 #if defined(__APPLE__) || defined(_WIN64)
@@ -123,7 +122,6 @@ bool cEnigma::CreateSettings()
 		cConsole::WriteLine("Creating settings file was interrupted.");
 		
 		/* Delete faulty file */
-		//remove("enigma.set");
 		cFile::Delete("enigma.set");
 		return false;
 	}
@@ -217,10 +215,10 @@ void cEnigma::PrintHelp()
 }
 
 #ifdef _WIN32
-HANDLE cConsole::hIn, cConsole::hOut;
-WORD cConsole::defaultTextAttributes;
+HANDLE   cConsole::hIn, cConsole::hOut;
+WORD     cConsole::defaultTextAttributes;
 cConsole cConsole::obj;
-DWORD cConsole::temp;
+DWORD    cConsole::temp;
 
 bool cConsole::Initialize()
 {
