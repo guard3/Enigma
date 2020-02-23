@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #if defined(__APPLE__) || defined(_WIN64)
 #define NUM_COPY 47
