@@ -9,9 +9,14 @@ int main()
 		return -1;
 #endif
 	
+	/* Using a lambda because (on windows) it gets messy changing all those colors */
+	auto ShowHelpHint = []() {
+		cConsole::WriteLine("Type " COLOR_YELLOW "~h" COLOR_DEFAULT " or " COLOR_YELLOW "~H" COLOR_DEFAULT " to show help menu.");
+	};
+	
 	/* Initialize Enigma */
-	cConsole::WriteLine("Enigma - by guard3");
-	cConsole::WriteLine("Type '~h' or '~H' to show help menu.");
+	cConsole::WriteLine(COLOR_BLUE "Enigma - by guard3" COLOR_DEFAULT);
+	ShowHelpHint();
 	cConsole::WriteChar('\n');
 	if (!cEnigma::Initialize())
 		return 1;
@@ -19,7 +24,7 @@ int main()
 	for (;;)
 	{
 		static char c;
-		cConsole::Write(">>> ");
+		cConsole::Write(COLOR_GREEN ">>> " COLOR_DEFAULT);
 		
 		/* Check the first char from stdin for command escape character */
 		c = cConsole::ReadChar();
@@ -56,8 +61,8 @@ int main()
 						cEnigma::PrintHelp();
 						break;
 					default:
-						cConsole::WriteLine("Invalid commannd.");
-						cConsole::WriteLine("Type '~h' or '~H' to show help menu.");
+						cConsole::WriteLine(COLOR_RED "Invalid command." COLOR_DEFAULT);
+						ShowHelpHint();
 				}
 			}
 			else
@@ -70,13 +75,14 @@ int main()
 #endif
 					cConsole::Flush();
 
-				cConsole::WriteLine("Invalid command.");
-				cConsole::WriteLine("Type '~h' or '~H' to show help menu.");
+				cConsole::WriteLine(COLOR_RED "Invalid command." COLOR_DEFAULT);
+				ShowHelpHint();
 			}
 			cConsole::WriteChar('\n');
 		}
 		else
 		{
+			cConsole::Write(COLOR_BLUE);
 			/* Cypher the first char we read earlier */
 			cConsole::WriteChar(cEnigma::Cypher(c));
 			
@@ -86,8 +92,9 @@ int main()
 			
 			/* Reset enigma for next input */
 			cEnigma::Reset();
-			cConsole::WriteChar('\n');
-			cConsole::WriteChar('\n');
+			//cConsole::WriteChar('\n');
+			//cConsole::WriteChar('\n');
+			cConsole::Write(COLOR_GREEN "\n\n");
 		}
 	}
 	return 0;
