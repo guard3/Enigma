@@ -4,6 +4,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+#define COLOR_RED    (FOREGROUND_RED | FOREGROUND_INTENSITY)
+#define COLOR_GREEN  (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
+#define COLOR_YELLOW (FOREGROUND_RED | FOREGROUND_GREEN)
+#define COLOR_BLUE   (FOREGROUND_BLUE | FOREGROUND_INTENSITY)
+
 class cConsole
 {
 private:
@@ -30,6 +35,8 @@ public:
 	}
 	template<DWORD size>
 	static inline void Read(char(&str)[size]) { ReadConsoleA(hIn, str, size, &temp, NULL); }
+	static inline void ChangeColor(WORD color) { SetConsoleTextAttribute(hOut, color); }
+	static inline void ResetColor() { SetConsoleTextAttribute(hOut, defaultTextAttributes); }
 };
 
 typedef struct
