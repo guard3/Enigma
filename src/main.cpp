@@ -1,23 +1,31 @@
 #include "Enigma.h"
 
 #include <stdio.h>
+#include "EnigmaIO.h"
 
 int main()
 {
+#ifdef _WIN32
+	/* Initialize console */
+	if (!cConsole::Initialize())
+		return -1;
+#endif
+
 	/* Initialize Enigma */
-	puts("Enigma - by guard3");
-	puts("Type '~h' or '~H' to show help menu.");
-	putchar('\n');
+	cConsole::WriteLine("Enigma - by guard3");
+	cConsole::WriteLine("Type '~h' or '~H' to show help menu.");
+	cConsole::WriteChar('\n');
 	if (!cEnigma::Initialize())
 		return 1;
 	
 	for (;;)
 	{
 		static char c;
-		fputs(">>> ", stdout);
+		cConsole::Write(">>> ");
 		
 		/* Check the first char from stdin for command escape character */
-		c = getchar();
+		//c = getchar();
+		c = cConsole::ReadChar();
 		if (c == '\n')
 			continue;
 		else if (c == '~')
@@ -47,43 +55,34 @@ int main()
 						cEnigma::PrintHelp();
 						break;
 					default:
-						puts("Invalid command.");
-						puts("Type '~h' or '~H' to show help menu.");
+						cConsole::WriteLine("Invalid command.");
+						cConsole::WriteLine("Type '~h' or '~H' to show help menu.");
 				}
 			}
 			else
 			{
-				/*
-				 * If more than one chars are input, clear stdin
-				 * If compiling with msvc, clear stdin with fflush()
-				 * in any other case it's undefined behaviour, so clear with getchar()
-				 */
+				/* If more than one chars are input, clear stdin */
 				if (b[1] != 0)
-				{
-#ifdef _MSC_VER
-					fflush(stdin);
-#else
 					while (getchar() != '\n');
-#endif
-				}
-				puts("Invalid command.");
-				puts("Type '~h' or '~H' to show help menu.");
+
+				cConsole::WriteLine("Invalid command.");
+				cConsole::WriteLine("Type '~h' or '~H' to show help menu.");
 			}
-			putchar('\n');
+			cConsole::WriteChar('\n');
 		}
 		else
 		{
 			/* Cypher the first char we read earlier */
-			putchar(cEnigma::Cypher(c));
+			cConsole::WriteChar(cEnigma::Cypher(c));
 			
 			/* Cypher the rest from stdin */
 			while ((c = getchar()) != '\n')
-				putchar(cEnigma::Cypher(c));
+				cConsole::WriteChar(cEnigma::Cypher(c));
 			
 			/* Reset enigma for next input */
 			cEnigma::Reset();
-			putchar('\n');
-			putchar('\n');
+			cConsole::WriteChar('\n');
+			cConsole::WriteChar('\n');
 		}
 	}
 	return 0;

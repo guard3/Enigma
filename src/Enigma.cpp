@@ -1,5 +1,5 @@
 #include "Enigma.h"
-
+#include "EnigmaIO.h"
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
@@ -111,16 +111,16 @@ bool cEnigma::CreateSettings()
 	FILE* f = fopen("enigma.set", "wb");
 	if (!f)
 	{
-		puts("Could not initialize Enigma.");
-		puts("Unable to create settings file.");
+		cConsole::WriteLine("Could not initialize Enigma.");
+		cConsole::WriteLine("Unable to create settings file.");
 		return false;
 	}
 	auto itemsWritten = fwrite(settings, 94, 6, f);
 	fclose(f);
 	if (itemsWritten != 6)
 	{
-		puts("Could not initialize Enigma.");
-		puts("Creating settings file was interrupted.");
+		cConsole::WriteLine("Could not initialize Enigma.");
+		cConsole::WriteLine("Creating settings file was interrupted.");
 		
 		/* Delete faulty file */
 		remove("enigma.set");
@@ -129,8 +129,8 @@ bool cEnigma::CreateSettings()
 	Backup();
 	
 	/* Print confirmation message */
-	fputs("Settings file ", stdout);
-	puts("created.");
+	cConsole::Write("Settings file ");
+	cConsole::WriteLine("created.");
 	
 	return true;
 }
@@ -141,8 +141,9 @@ void cEnigma::ReloadSettings()
 	FILE* f = fopen("enigma.set", "rb");
 	if (!f)
 	{
-		puts("Could not reload settings file.");
-		puts("Settings file is missing.");
+		cConsole::WriteLine("Could not reload settings file.");
+		cConsole::Write("Settings file ");
+		cConsole::WriteLine("is missing.");
 		return;
 	}
 	
@@ -151,15 +152,15 @@ void cEnigma::ReloadSettings()
 	fclose(f);
 	if (itemsRead != 6)
 	{
-		puts("Could not reload settings file.");
-		puts("Invalid size of settings file.");
+		cConsole::WriteLine("Could not reload settings file.");
+		cConsole::WriteLine("Invalid size of settings file.");
 		return;
 	}
 	Backup();
 	
 	/* Print confirmation message */
-	fputs("Settings file ", stdout);
-	puts("reloaded.");
+	cConsole::Write("Settings file ");
+	cConsole::WriteLine("reloaded.");
 }
 
 bool cEnigma::Initialize()
@@ -180,15 +181,15 @@ bool cEnigma::Initialize()
 	fclose(f);
 	if (itemsRead != 6)
 	{
-		puts("Could not initialize Enigma.");
-		puts("Invalid size of settings file.");
+		cConsole::WriteLine("Could not initialize Enigma.");
+		cConsole::WriteLine("Invalid size of settings file.");
 		return false;
 	}
 	Backup();
 	
 	/* Print confirmation message */
-	fputs("Settings file ", stdout);
-	puts("loaded.");
+	cConsole::Write("Settings file ");
+	cConsole::WriteLine("loaded.");
 
 	return true;
 }
@@ -204,7 +205,7 @@ void cEnigma::Reset()
 
 void cEnigma::PrintHelp()
 {
-	puts(
+	cConsole::WriteLine(
 		"\n"
 		"Commands:\n"
 		"  ~h ~H    Show help menu\n"
@@ -213,3 +214,35 @@ void cEnigma::PrintHelp()
 		"  ~q ~Q    Quit"
 	);
 }
+
+#ifdef _WIN32
+HANDLE cConsole::hIn, cConsole::hOut;
+WORD cConsole::defaultTextAttributes;
+cConsole cConsole::obj;
+DWORD cConsole::temp;
+
+bool cConsole::Initialize()
+{
+	/* Get handles to stdin and stdout */
+	hIn  = GetStdHandle(STD_INPUT_HANDLE);
+	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hIn == INVALID_HANDLE_VALUE || hOut == INVALID_HANDLE_VALUE)
+		return false;
+
+	/* Get default console text attributes */
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	if (GetConsoleScreenBufferInfo(hOut, &csbi) == 0)
+		return false;
+	defaultTextAttributes = csbi.wAttributes;
+	
+	return true;
+}
+
+cConsole::~cConsole()
+{
+	if (hIn != INVALID_HANDLE_VALUE)
+		CloseHandle(hIn);
+	if (hOut != INVALID_HANDLE_VALUE)
+		CloseHandle(hOut);
+}
+#endif
