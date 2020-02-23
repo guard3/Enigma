@@ -1,6 +1,4 @@
 #include "Enigma.h"
-
-#include <stdio.h>
 #include "EnigmaIO.h"
 
 int main()
@@ -10,7 +8,7 @@ int main()
 	if (!cConsole::Initialize())
 		return -1;
 #endif
-
+	
 	/* Initialize Enigma */
 	cConsole::WriteLine("Enigma - by guard3");
 	cConsole::WriteLine("Type '~h' or '~H' to show help menu.");

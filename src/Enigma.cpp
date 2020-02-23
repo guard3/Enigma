@@ -2,7 +2,7 @@
 #include "EnigmaIO.h"
 #include <stdlib.h>
 #include <time.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdint.h>
 
 #if defined(__APPLE__) || defined(_WIN64)
@@ -108,22 +108,23 @@ bool cEnigma::CreateSettings()
 	MakeRotorXb(rotor2b);
 	
 	/* Write to file */
-	FILE* f = fopen("enigma.set", "wb");
+	file f = cFile::Open("enigma.set", cFile::OpenWrite);
 	if (!f)
 	{
 		cConsole::WriteLine("Could not initialize Enigma.");
 		cConsole::WriteLine("Unable to create settings file.");
 		return false;
 	}
-	auto itemsWritten = fwrite(settings, 94, 6, f);
-	fclose(f);
-	if (itemsWritten != 6)
+	auto bytesWritten = cFile::Write(f, settings, 6 * 94);
+	cFile::Close(f);
+	if (bytesWritten != 6 * 94)
 	{
 		cConsole::WriteLine("Could not initialize Enigma.");
 		cConsole::WriteLine("Creating settings file was interrupted.");
 		
 		/* Delete faulty file */
-		remove("enigma.set");
+		//remove("enigma.set");
+		cFile::Delete("enigma.set");
 		return false;
 	}
 	Backup();
@@ -138,7 +139,7 @@ bool cEnigma::CreateSettings()
 void cEnigma::ReloadSettings()
 {
 	/* Open settings file */
-	FILE* f = fopen("enigma.set", "rb");
+	file f = cFile::Open("enigma.set", cFile::OpenRead);
 	if (!f)
 	{
 		cConsole::WriteLine("Could not reload settings file.");
@@ -148,9 +149,9 @@ void cEnigma::ReloadSettings()
 	}
 	
 	/* Load contents */
-	auto itemsRead = fread(settings, 94, 6, f);
-	fclose(f);
-	if (itemsRead != 6)
+	auto bytesRead = cFile::Read(f, settings, 6 * 94);
+	cFile::Close(f);
+	if (bytesRead != 6 * 94)
 	{
 		cConsole::WriteLine("Could not reload settings file.");
 		cConsole::WriteLine("Invalid size of settings file.");
@@ -169,7 +170,7 @@ bool cEnigma::Initialize()
 	srand(static_cast<unsigned int>(time(nullptr)));
 	
 	/* Try to open settings file */
-	FILE* f = fopen("enigma.set", "rb");
+	file f = cFile::Open("enigma.set", cFile::OpenRead);
 	if (!f)
 	{
 		/* Settings file can't be opened, so we create a new one */
@@ -177,9 +178,9 @@ bool cEnigma::Initialize()
 	}
 	
 	/* Settings file is open, so we simply load it */
-	auto itemsRead = fread(settings, 94, 6, f);
-	fclose(f);
-	if (itemsRead != 6)
+	auto bytesRead = cFile::Read(f, settings, 6 * 94);
+	cFile::Close(f);
+	if (bytesRead != 6 * 94)
 	{
 		cConsole::WriteLine("Could not initialize Enigma.");
 		cConsole::WriteLine("Invalid size of settings file.");
