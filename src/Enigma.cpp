@@ -110,12 +110,7 @@ bool cEnigma::CreateSettings()
 	file f = cFile::Open("enigma.set", cFile::OpenWrite);
 	if (!f)
 	{
-#ifdef _WIN32
-		cConsole::ChangeColor(COLOR_RED);
-		cConsole::WriteLine("Could not initialize Enigma.");
-#else
-		cConsole::WriteLine(COLOR_RED "Could not initialize Enigma.");
-#endif
+		cConsole::WriteLine<COLOR_RED>("Could not initialize Enigma.");
 		cConsole::WriteLine("Unable to create settings file.");
 		return false;
 	}
@@ -123,12 +118,7 @@ bool cEnigma::CreateSettings()
 	cFile::Close(f);
 	if (bytesWritten != 6 * 94)
 	{
-#ifdef _WIN32
-		cConsole::ChangeColor(COLOR_RED);
-		cConsole::WriteLine("Could not initialize Enigma.");
-#else
-		cConsole::WriteLine(COLOR_RED "Could not initialize Enigma.");
-#endif
+		cConsole::WriteLine<COLOR_RED>("Could not initialize Enigma.");
 		cConsole::WriteLine("Creating settings file was interrupted.");
 		
 		/* Delete faulty file */
@@ -138,12 +128,7 @@ bool cEnigma::CreateSettings()
 	Backup();
 	
 	/* Print confirmation message */
-#ifdef _WIN32
-	cConsole::ChangeColor(COLOR_GREEN);
-	cConsole::Write("Settings file ");
-#else
-	cConsole::Write(COLOR_GREEN "Settings file ");
-#endif
+	cConsole::Write<COLOR_GREEN>("Settings file ");
 	cConsole::WriteLine("created.");
 	
 	return true;
@@ -155,12 +140,7 @@ void cEnigma::ReloadSettings()
 	file f = cFile::Open("enigma.set", cFile::OpenRead);
 	if (!f)
 	{
-#ifdef _WIN32
-		cConsole::ChangeColor(COLOR_RED);
-		cConsole::WriteLine("Could not reload settings file.");
-#else
-		cConsole::WriteLine(COLOR_RED "Could not reload settings file.");
-#endif
+		cConsole::WriteLine<COLOR_RED>("Could not reload settings file.");
 		cConsole::Write("Settings file ");
 		cConsole::WriteLine("is missing.");
 		return;
@@ -171,24 +151,14 @@ void cEnigma::ReloadSettings()
 	cFile::Close(f);
 	if (bytesRead != 6 * 94)
 	{
-#ifdef _WIN32
-		cConsole::ChangeColor(COLOR_RED);
-		cConsole::WriteLine("Could not reload settings file.");
-#else
-		cConsole::WriteLine(COLOR_RED "Could not reload settings file.");
-#endif
+		cConsole::WriteLine<COLOR_RED>("Could not reload settings file.");
 		cConsole::WriteLine("Invalid size of settings file.");
 		return;
 	}
 	Backup();
 	
 	/* Print confirmation message */
-#ifdef _WIN32
-	cConsole::ChangeColor(COLOR_GREEN);
-	cConsole::Write("Settings file ");
-#else
-	cConsole::Write(COLOR_GREEN "Settings file ");
-#endif
+	cConsole::Write<COLOR_GREEN>("Settings file ");
 	cConsole::WriteLine("reloaded.");
 }
 
@@ -210,24 +180,14 @@ bool cEnigma::Initialize()
 	cFile::Close(f);
 	if (bytesRead != 6 * 94)
 	{
-#ifdef _WIN32
-		cConsole::ChangeColor(COLOR_RED);
-		cConsole::WriteLine("Could not initialize Enigma.");
-#else
-		cConsole::WriteLine(COLOR_RED "Could not initialize Enigma.");
-#endif
+		cConsole::WriteLine<COLOR_RED>("Could not initialize Enigma.");
 		cConsole::WriteLine("Invalid size of settings file.");
 		return false;
 	}
 	Backup();
 	
 	/* Print confirmation message */
-#ifdef _WIN32
-	cConsole::ChangeColor(COLOR_GREEN);
-	cConsole::Write("Settings file ");
-#else
-	cConsole::Write(COLOR_GREEN "Settings file ");
-#endif
+	cConsole::Write<COLOR_GREEN>("Settings file ");
 	cConsole::WriteLine("loaded.");
 	return true;
 }
@@ -243,66 +203,14 @@ void cEnigma::Reset()
 
 void cEnigma::PrintHelp()
 {
-#ifdef _WIN32
-	cConsole::WriteChar('\n');
-	cConsole::ChangeColor(COLOR_BLUE);
-	cConsole::WriteLine("Commands:");
-	cConsole::ChangeColor(COLOR_YELLOW);
-	cConsole::Write("  ~h ~H");
-	cConsole::ResetColor();
-	cConsole::WriteLine("    Show help menu");
-	cConsole::ChangeColor(COLOR_YELLOW);
-	cConsole::Write("  ~r ~R");
-	cConsole::ResetColor();
-	cConsole::WriteLine("    Reload settings file");
-	cConsole::ChangeColor(COLOR_YELLOW);
-	cConsole::Write("  ~n ~N");
-	cConsole::ResetColor();
-	cConsole::WriteLine("    Create a new settings file");
-	cConsole::ChangeColor(COLOR_YELLOW);
-	cConsole::Write("  ~q ~Q");
-	cConsole::ResetColor();
-	cConsole::WriteLine("    Quit");
-#else
-	cConsole::WriteLine(
-		"\n"
-		COLOR_BLUE "Commands:\n"
-		COLOR_YELLOW "  ~h ~H" COLOR_DEFAULT "    Show help menu\n"
-		COLOR_YELLOW "  ~r ~R" COLOR_DEFAULT "    Reload settings file\n"
-		COLOR_YELLOW "  ~n ~N" COLOR_DEFAULT "    Create a new settings file\n"
-		COLOR_YELLOW "  ~q ~Q" COLOR_DEFAULT "    Quit"
-	);
-#endif
+	cConsole::NewLine();
+	cConsole::WriteLine<COLOR_BLUE>("Commands:");
+	cConsole::Write<COLOR_YELLOW>("  ~h ~H");
+	cConsole::WriteLine<COLOR_DEFAULT>("    Show help menu");
+	cConsole::Write<COLOR_YELLOW>("  ~r ~R");
+	cConsole::WriteLine<COLOR_DEFAULT>("    Reload settings file");
+	cConsole::Write<COLOR_YELLOW>("  ~n ~N");
+	cConsole::WriteLine<COLOR_DEFAULT>("    Create a new settings file");
+	cConsole::Write<COLOR_YELLOW>("  ~q ~Q");
+	cConsole::WriteLine<COLOR_DEFAULT>("    Quit");
 }
-
-#ifdef _WIN32
-HANDLE   cConsole::hIn, cConsole::hOut;
-WORD     cConsole::defaultTextAttributes;
-cConsole cConsole::obj;
-DWORD    cConsole::temp;
-
-bool cConsole::Initialize()
-{
-	/* Get handles to stdin and stdout */
-	hIn  = GetStdHandle(STD_INPUT_HANDLE);
-	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hIn == INVALID_HANDLE_VALUE || hOut == INVALID_HANDLE_VALUE)
-		return false;
-
-	/* Get default console text attributes */
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	if (GetConsoleScreenBufferInfo(hOut, &csbi) == 0)
-		return false;
-	defaultTextAttributes = csbi.wAttributes;
-
-	return true;
-}
-
-cConsole::~cConsole()
-{
-	if (hIn != INVALID_HANDLE_VALUE)
-		CloseHandle(hIn);
-	if (hOut != INVALID_HANDLE_VALUE)
-		CloseHandle(hOut);
-}
-#endif
