@@ -1,6 +1,5 @@
 #include "Enigma.h"
 #include "EnigmaIO.h"
-#include <iostream>
 
 int main()
 {
