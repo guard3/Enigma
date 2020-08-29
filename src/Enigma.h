@@ -22,7 +22,7 @@ public:
 	static bool Initialize();
 	static void Reset();
 	static void PrintHelp();
-	static inline char Cypher(const char c)
+	static char Cypher(const char c)
 	{
 		if (c < ' ' || c > '}')
 			return c;

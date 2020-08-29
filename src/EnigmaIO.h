@@ -47,7 +47,6 @@
 
 #include <Windows.h>
 #include <stdlib.h>
-#include <iostream>
 
 /* Enum for colours to be used in cConsole methods */
 enum eConsoleColor : WORD
@@ -60,8 +59,7 @@ enum eConsoleColor : WORD
 };
 
 #else
-#include <stdint.h>
-#include <stdio.h>
+#include <unistd.h>
 
 /* Enum for colours to be used in cConsole methods */
 enum eConsoleColor : char
@@ -78,11 +76,13 @@ class cConsole final
 {
 private:
 #ifdef _WIN32
+	/* Size of string buffer type */
+	typedef DWORD strsize_t;
+
 	/* Static console variables */
-	static cConsole instance;        // Static instance of cConsole; used only to invoke the private constructor
-	inline static HANDLE hIn, hOut;  // stdin and stdout handles
-	inline static WORD   attributes; // Default console text attributes; used for resetting console colors
-	inline static DWORD  numRead;    // A DWORD for ReadConsoleA() to store the number of chars read from stdin
+	static cConsole instance;       // Static instance of cConsole; used only to invoke the private constructor
+	inline static HANDLE hIn, hOut; // stdin and stdout handles
+	inline static WORD   attr;      // Default console text attributes; used for resetting console colors
 
 	/* Instance constructor; initializes WINAPI console handles and attributes */
 	cConsole()
@@ -97,7 +97,7 @@ private:
 				hIn = GetStdHandle(STD_INPUT_HANDLE);
 				if (hIn && hIn != INVALID_HANDLE_VALUE)
 				{
-					attributes = csbi.wAttributes;
+					attr = csbi.wAttributes;
 					return;
 				}
 			}
@@ -106,26 +106,32 @@ private:
 		exit(EXIT_FAILURE);
 	}
 
+	/* Intermediary functions */
+	static DWORD _my_read(void* p, strsize_t n)
+	{
+		static DWORD result;
+		ReadConsoleA(hIn, p, n, &result, NULL);
+		return result;
+	}
+	static void _my_write(const void* p, strsize_t n) { WriteConsoleA(hOut, p, n, NULL, NULL); }
 #else
-	typedef uint32_t DWORD;
+	/* Size of string buffer type */
+	typedef size_t strsize_t;
 
+	/* Intermediary functions */
+	static ssize_t _my_read(void* p, strsize_t n) { return read(STDIN_FILENO, p, n); }
+	static void _my_write(const void* p, strsize_t n) { write(STDOUT_FILENO, p, n); }
+
+	/* Private constructor to prevent object creation */
 	cConsole() {}
 #endif
 
 public:
-
-
 	/* FUNCTION: cConsole::Write()                     *
 	 *           Print a character or string to stdout */
-#ifdef _WIN32
-	static void Write(const char c) { WriteConsoleA(hOut, &c, 1, NULL, NULL); }
-	template<DWORD size>
-	static void Write(const char(&str)[size]) { WriteConsoleA(hOut, str, size - 1, NULL, NULL); }
-#else
-	static void Write(const char c) { putchar(c); }
-	template<DWORD size>
-	static void Write(const char(&str)[size]) { fputs(str, stdout); }
-#endif
+	static void Write(const char c) { _my_write(&c, 1); }
+	template<strsize_t size>
+	static void Write(const char(&str)[size]) { _my_write(&str, size - 1); }
 	template<>
 	static void Write(const char(&str)[1]) {}
 
@@ -136,15 +142,8 @@ public:
 	/* FUNCTION: cConsole::WriteLine()                           *
 	 *           Print a character or string to stdout as a line */
 	static void WriteLine(const char c) { Write(c); NewLine(); }
-#ifdef _WIN32
-	template<DWORD size>
+	template<strsize_t size>
 	static void WriteLine(const char(&str)[size]) { Write(str); NewLine(); }
-#else
-	template<DWORD size>
-	static void WriteLine(const char(&str)[size]) { puts(str); }
-	template<>
-	static void WriteLine(const char(&str)[1]) { NewLine(); }
-#endif
 
 	/* FUNCTION: cConsole::ChangeColor()   *
 	 *           Change console text color */
@@ -152,7 +151,7 @@ public:
 	template<eConsoleColor color>
 	static void SetColor() { SetConsoleTextAttribute(hOut, color); }
 	template<>
-	static void SetColor<COLOR_DEFAULT>() { SetConsoleTextAttribute(hOut, attributes); }
+	static void SetColor<COLOR_DEFAULT>() { SetConsoleTextAttribute(hOut, attr); }
 #else
 	template<eConsoleColor color>
 	static void SetColor()
@@ -168,47 +167,46 @@ public:
 
 	/* FUNCTION: cConsole::Read()                      *
 	 *           Read a character or string from stdin */
-	static char Read()
-	{
-#ifdef _WIN32
-		char c;
-		ReadConsoleA(hIn, &c, 1, &numRead, NULL);
-		return c;
-#else
-		return getchar();
-#endif
-	}
-	template<DWORD size>
+	static void Read(char& c) { _my_read(&c, 1); }
+	template<strsize_t size>
 	static void Read(char(&str)[size])
 	{
+		auto num = _my_read(str, size - 1);
 #ifdef _WIN32
-		if (!ReadConsoleA(hIn, str, size - 1, &numRead, NULL))
+		if (str[num - 1] == '\n')
+		{
+			str[num - 2] = '\n';
+			str[num - 1] = '\0';
 			return;
-		if (str[numRead - 1] == '\r')
-			str[numRead - 1] = Read();
-		str[numRead] = '\0';
-#else
-		fgets(str, size, stdin);
+		}
+		if (str[num - 1] == '\r')
+			Read(str[num - 1]);
 #endif
+		str[num] = '\0';
 	}
 	template<>
-	static void Read(char(&str)[1]) { str[0] = '\0'; }
+	static void Read(char(&str)[2]) { Read(str[0]); str[1] = '\0'; }
+	template<>
+	static void Read(char(&str)[1]) {}
 
 	/* FUNCTION: cConsole::ReadSkipCarriageReturn()              *
 	 *           Read a character from stdin, skipping any '\r's */
-	static char ReadSkipCarriageReturn()
+	static void ReadSkipCarriageReturn(char& c)
 	{
-		char c = Read();
+		Read(c);
 #ifdef _WIN32
 		if (c == '\r')
-			return Read();
+			Read(c);
 #endif
-		return c;
 	}
 
 	/* FUNCTION: cConsole::Flush() *
 	 *           Clear stdin       */
-	static void Flush() { while (Read() != '\n'); }
+	static void Flush()
+	{
+		char c;
+		do { Read(c); } while (c != '\n');
+	}
 
 	/* Color variants of functions */
 	template<eConsoleColor color>
@@ -223,18 +221,18 @@ public:
 	static void WriteLine(const char(&str)[size]) { SetColor(color); WriteLine(str); }
 
 #ifdef _WIN32
-	/* Close console handles */
+	/* Reset text color and close console handles */
 	~cConsole()
 	{
 		SetColor(COLOR_DEFAULT);
 		CloseHandle(hIn);
 		CloseHandle(hOut);
 	}
+#endif
 };
 
+#ifdef _WIN32
 inline cConsole cConsole::instance;
-#else
-};
 #endif
 
 typedef struct
@@ -288,38 +286,9 @@ public:
 	static inline void Delete(const char* filename) { DeleteFileA(filename); }
 };
 
-#ifdef NULL
-#else
+#ifndef _WIN32
 #include <stdint.h>
 #include <stdio.h>
-
-//#define COLOR_DEFAULT "\033[0m"
-//#define COLOR_RED     "\033[1;31m"
-//#define COLOR_GREEN   "\033[1;32m"
-//#define COLOR_YELLOW  "\033[1;33m"
-//#define COLOR_BLUE    "\033[1;36m"
-
-enum eConsoleColor : char
-{
-	COLOR_DEFAULT = 0,
-	COLOR_RED = '1', // "\033[1;31m"
-	COLOR_GREEN = '2', // "\033[1;32m"
-	COLOR_YELLOW = '3', // "\033[1;33m"
-	COLOR_BLUE = '6'  // "\033[1;36m"
-};
-
-class cConsole
-{
-public:
-	static inline void Flush() { while (getchar() != '\n'); }
-	static inline void WriteChar(const char c) { putchar(c); }
-	static inline void Write(const char* str) { fputs(str, stdout); }
-	static inline void WriteLine(const char* str) { puts(str); }
-	static inline char ReadChar() { return getchar(); }
-	template<int size>
-	static inline void Read(char(&str)[size]) { fgets(str, size, stdin); }
-};
-
 typedef struct
 {
 private:

@@ -1,5 +1,6 @@
 #include "Enigma.h"
 #include "EnigmaIO.h"
+#include <iostream>
 
 int main()
 {
@@ -26,16 +27,14 @@ int main()
 		cConsole::SetColor(COLOR_DEFAULT);
 		
 		/* Check the first char from stdin for command escape character */
-		c = cConsole::ReadSkipCarriageReturn();
+		cConsole::ReadSkipCarriageReturn(c);
 		if (c == '\n')
 			continue;
 		else if (c == '~')
 		{
 			/* Command mode is triggered */
-			char b[3];
+			static char b[3];
 			cConsole::Read(b);
-			cConsole::WriteLine(b);
-
 			if (b[1] == '\n')
 			{
 				/* If only one char was read */
@@ -65,7 +64,7 @@ int main()
 			else
 			{
 				/* If more than one chars are input, clear stdin */
-				if (b[1] != 0)
+				if (b[0] != '\n')
 					cConsole::Flush();
 				cConsole::WriteLine<COLOR_RED>("Invalid command.");
 				ShowHelpHint();
@@ -75,12 +74,13 @@ int main()
 		else
 		{
 			cConsole::SetColor(COLOR_BLUE);
-			/* Cypher the first char we read earlier */
-			cConsole::Write(cEnigma::Cypher(c));
-			
-			/* Cypher the rest from stdin */
-			while ((c = cConsole::Read()) != '\n')
+
+			/* Cypher */
+			do
+			{
 				cConsole::Write(cEnigma::Cypher(c));
+				cConsole::Read(c);
+			} while (c != '\n');
 			
 			/* Reset enigma for next input */
 			cEnigma::Reset();
