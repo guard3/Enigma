@@ -60,6 +60,7 @@ enum eConsoleColor : WORD
 
 #else
 #include <unistd.h>
+#include <fcntl.h>
 
 /* Enum for colours to be used in cConsole methods */
 enum eConsoleColor : char
@@ -255,6 +256,63 @@ public:
 #ifdef _WIN32
 inline cConsole cConsole::instance;
 #endif
+
+class cF
+{
+protected:
+#ifdef _WIN32
+	typedef HANDLE file_t;
+	typedef DWORD bufsize_t;
+	static inline constexpr file_t F_ERROR = INVALID_HANDLE_VALUE;
+	
+#else
+	typedef int file_t;
+	typedef size_t bufsize_t;
+	static inline constexpr file_t F_ERROR = -1;
+	
+	static file_t _my_open_r(const char* filename) { return open (filename, O_RDONLY); }
+	static file_t _my_open_w(const char* filename) { return creat(filename, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); }
+	static bool   _my_read  (file_t f,       void* b, bufsize_t s) { return read (f, b, s) == s; }
+	static bool   _my_write (file_t f, const void* b, bufsize_t s) { return write(f, b, s) == s; }
+	static void   _my_close (file_t f) { close(f); }
+#endif
+	
+	file_t m_fd;
+	
+	cF() {}
+	cF(const cF&) = delete;
+	cF(cF&&) = delete;
+	cF& operator=(const cF&) = delete;
+	cF& operator=(cF&&) = delete;
+	
+public:
+	/* Boolean operators to check if file is successfully opened */
+	operator bool()  { return m_fd != F_ERROR; }
+	bool operator!() { return m_fd == F_ERROR; }
+	
+	void Close()
+	{
+		if (m_fd != F_ERROR)
+			_my_close(m_fd);
+		m_fd = F_ERROR;
+	}
+	
+	~cF() { Close(); }
+};
+
+class cIFile : public cF
+{
+public:
+	cIFile(const char* filename) { m_fd = _my_open_r(filename); }
+	bool Read(void* dest, bufsize_t size) { return _my_read(m_fd, dest, size); }
+};
+
+class cOFile : public cF
+{
+public:
+	cOFile(const char* filename) { m_fd = _my_open_w(filename); }
+	bool Write(const void* src, bufsize_t size) { return _my_write(m_fd, src, size); }
+};
 
 #ifdef _WIN32
 typedef struct

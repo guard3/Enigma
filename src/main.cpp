@@ -3,7 +3,7 @@
 
 int main()
 {
-	/* Using a lambda because (on windows) it gets messy changing all those colors */
+	/* Using a lambda for convenience */
 	auto ShowHelpHint = []() {
 		cConsole::Write<COLOR_DEFAULT>("Type ");
 		cConsole::Write<COLOR_YELLOW>("~h ");
