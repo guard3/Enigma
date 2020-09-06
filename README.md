@@ -4,7 +4,7 @@ A simple and fast C++ implementation of an [Enigma machine](https://en.wikipedia
 ## Getting Started
 To simply get **Enigma** up and running, download an executable from the **bin/** folder, depending on your platform. Though not necessary, it's recommended that you add the executable path to **$PATH**([Windows](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/)/[Linux](https://opensource.com/article/17/6/set-path-linux)).
 ### Launch
-To run Enigma, double click on the executable or launch from the commandline.\
+To run **Enigma**, double click on the executable or launch from the commandline.\
 On Windows:
 ```
 cd path_to_enigma_executable
@@ -22,10 +22,10 @@ chmod +x enigma
 ```
 and try again.
 ### Cypher messages
-After **Enigma** is up and running, simply type a normal or cyphered message after the ```>>>``` and let **Enigma** (de)cypher it. Supported characters are [ASCII](https://www.asciitable.com) ' ' to '}'.\
+After **Enigma** is up and running, simply type a normal or cyphered message and let **Enigma** (de)cypher it. Supported characters are [ASCII](https://www.asciitable.com) ' ' to '}'.\
 ![(De)cyphering example](https://cdn.discordapp.com/attachments/443429038355120128/681219782309314587/Screenshot_2020-02-23_at_9.24.04_PM.png)
 ### Settings
-The fun of the Enigma relies on its many different settings. Cyphering messages requires an **enigma.set** file to be present in the current working directory, which stores the settings for the 2 rotors, plugboard and reflector (more on how an enigma machine works on [Wikipedia](https://en.wikipedia.org/wiki/Enigma_machine)). If a settings file isn't present, Enigma automatically generates one on start up. When you want to exchange cyphered messages with others, make sure everyone is using the same **enigma.set** file, otherwise decyphering messages with produce rubbish.
+The fun of the **Enigma** relies on its many different settings. Cyphering messages requires an **enigma.set** file to be present in the current working directory, which stores the settings for the 2 rotors, plugboard and reflector (more on how an enigma machine works on [Wikipedia](https://en.wikipedia.org/wiki/Enigma_machine)). If a settings file isn't present, Enigma automatically generates one on startup. When you want to exchange cyphered messages with others, make sure everyone is using the same **enigma.set** file, otherwise decyphering messages will produce rubbish.
 ### Special Commands
 `~h ~H`: Show **h**elp menu\
 `~r ~R`: **R**eload settings file\
@@ -45,4 +45,4 @@ Alternatively, source can be compiled with any other compiler, such as [g++](htt
 g++ -std=c++17 src/main.cpp src/Enigma.cpp -O3 -o enigma
 ```
 ## License
-**Enigma** is licenced under the **GNU General Public License** - see [LICENCE](https://github.com/guard3/Enigma/blob/master/LICENSE) file for details.
+**Enigma** is licenced under the **GNU General Public License** - see [LICENSE](https://github.com/guard3/Enigma/blob/master/LICENSE) file for details.
