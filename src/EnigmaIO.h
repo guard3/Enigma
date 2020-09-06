@@ -1,8 +1,6 @@
 #pragma once
-//#undef _WIN32
 #ifdef _WIN32
-
-/* Disable Windows unnecessary definitions */
+/* Disable unnecessary Windows definitions */
 #define WIN32_LEAN_AND_MEAN
 
 #define NOGDICAPMASKS     // - CC_*, LC_*, PC_*, CP_*, TC_*, RC_
@@ -52,7 +50,7 @@
 enum eConsoleColor : WORD
 {
 	COLOR_DEFAULT = 0,
-	COLOR_BLUE    = FOREGROUND_INTENSITY | FOREGROUND_BLUE,
+	COLOR_BLUE    = FOREGROUND_BLUE      | FOREGROUND_GREEN,
 	COLOR_RED     = FOREGROUND_INTENSITY | FOREGROUND_RED,
 	COLOR_GREEN   = FOREGROUND_INTENSITY | FOREGROUND_GREEN,
 	COLOR_YELLOW  = FOREGROUND_RED       | FOREGROUND_GREEN
@@ -254,150 +252,99 @@ public:
 };
 
 #ifdef _WIN32
+/* The private console instance */
 inline cConsole cConsole::instance;
 #endif
 
-class cF
+class cFile
 {
-protected:
 #ifdef _WIN32
+private:
+	/* CreateFileA wrapper */
+	static HANDLE _my_simple_open(const char* filename, DWORD dwDesiredAccess, DWORD dwCreationDisposition)
+	{
+		return CreateFileA(
+			filename,
+			dwDesiredAccess,
+			NULL,
+			NULL,
+			dwCreationDisposition,
+			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+			NULL
+		);
+	}
+
+protected:
+	/* Platform dependent typedefs */
 	typedef HANDLE file_t;
 	typedef DWORD bufsize_t;
 	static inline constexpr file_t F_ERROR = INVALID_HANDLE_VALUE;
-	
+
+	/* Intermediary functions */
+	static file_t _my_open_r(const char* filename) { return _my_simple_open(filename, GENERIC_READ,  OPEN_EXISTING); }
+	static file_t _my_open_w(const char* filename) { return _my_simple_open(filename, GENERIC_WRITE, CREATE_ALWAYS); }
+	static bool _my_read(file_t f, void* b, bufsize_t s)
+	{
+		DWORD bytesRead;
+		if (!ReadFile(f, b, s, &bytesRead, NULL))
+			return false;
+		return bytesRead == s;
+	}
+	static bool _my_write(file_t f, const void* b, bufsize_t s)
+	{
+		DWORD bytesWritten;
+		if (!WriteFile(f, b, s, &bytesWritten, NULL))
+			return false;
+		return bytesWritten == s;
+	}
+	static void _my_close(file_t f) { CloseHandle(f); }
+	static void _my_delete(const char* filename) { DeleteFileA(filename); }
 #else
+protected:
+	/* Platform dependent typedefs */
 	typedef int file_t;
 	typedef size_t bufsize_t;
 	static inline constexpr file_t F_ERROR = -1;
 	
+	/* Intermediary functions */
 	static file_t _my_open_r(const char* filename) { return open (filename, O_RDONLY); }
 	static file_t _my_open_w(const char* filename) { return creat(filename, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); }
 	static bool   _my_read  (file_t f,       void* b, bufsize_t s) { return read (f, b, s) == s; }
 	static bool   _my_write (file_t f, const void* b, bufsize_t s) { return write(f, b, s) == s; }
 	static void   _my_close (file_t f) { close(f); }
+	static void   _my_delete(const char* filename) { unlink(filename); }
 #endif
 	
+	/* The file object's file descriptor or handle */
 	file_t m_fd;
 	
-	cF() {}
-	cF(const cF&) = delete;
-	cF(cF&&) = delete;
-	cF& operator=(const cF&) = delete;
-	cF& operator=(cF&&) = delete;
+	/* Private constructors to disable cFile object creation */
+	cFile() { m_fd = F_ERROR; }
+	cFile(const cFile&) = delete;
+	cFile(cFile&&)      = delete;
+	cFile& operator=(const cFile&) = delete;
+	cFile& operator=(cFile&&)      = delete;
 	
 public:
+	~cFile() { if (m_fd != F_ERROR) _my_close(m_fd); }
+
 	/* Boolean operators to check if file is successfully opened */
 	operator bool()  { return m_fd != F_ERROR; }
 	bool operator!() { return m_fd == F_ERROR; }
-	
-	void Close()
-	{
-		if (m_fd != F_ERROR)
-			_my_close(m_fd);
-		m_fd = F_ERROR;
-	}
-	
-	~cF() { Close(); }
+
+	static void Delete(const char* filename) { _my_delete(filename); }
 };
 
-class cIFile : public cF
+class cIFile : public cFile
 {
 public:
 	cIFile(const char* filename) { m_fd = _my_open_r(filename); }
 	bool Read(void* dest, bufsize_t size) { return _my_read(m_fd, dest, size); }
 };
 
-class cOFile : public cF
+class cOFile : public cFile
 {
 public:
 	cOFile(const char* filename) { m_fd = _my_open_w(filename); }
 	bool Write(const void* src, bufsize_t size) { return _my_write(m_fd, src, size); }
 };
-
-#ifdef _WIN32
-typedef struct
-{
-private:
-	friend class cFile;
-	HANDLE handle;
-
-public:
-	inline operator bool()  { return handle != INVALID_HANDLE_VALUE; }
-	inline bool operator!() { return handle == INVALID_HANDLE_VALUE; }
-} file;
-
-class cFile
-{
-private:
-	typedef DWORD mode;
-
-public:
-	static constexpr mode OpenRead  = GENERIC_READ;
-	static constexpr mode OpenWrite = GENERIC_WRITE;
-
-	static inline file Open(const char* filename, mode openmode)
-	{
-		file result;
-		result.handle = CreateFileA(
-			filename,
-			openmode,
-			NULL,
-			NULL,
-			openmode == OpenRead ? OPEN_EXISTING : CREATE_ALWAYS,
-			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
-			NULL
-		);
-		return result;
-	}
-	static inline void Close(file f) { CloseHandle(f.handle); }
-	static inline DWORD Read(file f, void* ptr, DWORD size)
-	{
-		DWORD bytesRead;
-#pragma warning(suppress: 6031)
-		ReadFile(f.handle, ptr, size, &bytesRead, NULL);
-		return bytesRead;
-	}
-	static inline DWORD Write(file f, void* ptr, DWORD size)
-	{
-		DWORD bytesWritten;
-		WriteFile(f.handle, ptr, size, &bytesWritten, NULL);
-		return bytesWritten;
-	}
-	static inline void Delete(const char* filename) { DeleteFileA(filename); }
-};
-
-#else
-#include <stdint.h>
-#include <stdio.h>
-typedef struct
-{
-private:
-	FILE* file;
-	friend class cFile;
-	
-public:
-	inline operator bool()  { return file; }
-	inline bool operator!() { return !file; }
-} file;
-
-class cFile
-{
-private:
-	typedef int_fast32_t mode;
-	
-public:
-	static constexpr mode OpenRead  = 0x6272; /* "rb" */
-	static constexpr mode OpenWrite = 0x6277; /* "wb" */
-	
-	static inline file Open(const char* filename, mode openmode)
-	{
-		file result;
-		result.file = fopen(filename, reinterpret_cast<const char*>(&openmode));
-		return result;
-	}
-	static inline void Close(file f) { fclose(f.file); }
-	static inline size_t Read(file f, void* ptr, size_t size) { return fread(ptr, 1, size, f.file); }
-	static inline size_t Write(file f, void* ptr, size_t size) { return fwrite(ptr, 1, size, f.file); }
-	static inline void Delete(const char* filename) { remove(filename); }
-};
-#endif

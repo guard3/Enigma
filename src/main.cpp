@@ -32,7 +32,7 @@ int main()
 		else if (c == '~')
 		{
 			/* Command mode is triggered */
-			static char b[3];
+			char b[3];
 			cConsole::Read(b);
 			if (b[1] == '\n')
 			{

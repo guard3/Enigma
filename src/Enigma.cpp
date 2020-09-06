@@ -107,7 +107,6 @@ bool cEnigma::CreateSettings()
 	MakeRotorXb(rotor2b);
 	
 	/* Write to file */
-	//file f = cFile::Open("enigma.set", cFile::OpenWrite);
 	cOFile f("enigma.set");
 	if (!f)
 	{
@@ -115,9 +114,7 @@ bool cEnigma::CreateSettings()
 		cConsole::WriteLine("Unable to create settings file.");
 		return false;
 	}
-	//auto bytesWritten = cFile::Write(f, settings, 6 * 94);
-	//cFile::Close(f);
-	if (!f.Write(settings, 6 * 94))//bytesWritten != 6 * 94)
+	if (!f.Write(settings, 6 * 94))
 	{
 		cConsole::WriteLine<COLOR_RED>("Could not initialize Enigma.");
 		cConsole::WriteLine("Creating settings file was interrupted.");
@@ -126,7 +123,6 @@ bool cEnigma::CreateSettings()
 		cFile::Delete("enigma.set");
 		return false;
 	}
-	f.Close();
 	Backup();
 	
 	/* Print confirmation message */
@@ -139,7 +135,6 @@ bool cEnigma::CreateSettings()
 void cEnigma::ReloadSettings()
 {
 	/* Open settings file */
-	//file f = cFile::Open("enigma.set", cFile::OpenRead);
 	cIFile f("enigma.set");
 	if (!f)
 	{
@@ -150,15 +145,12 @@ void cEnigma::ReloadSettings()
 	}
 	
 	/* Load contents */
-	//auto bytesRead = cFile::Read(f, settings, 6 * 94);
-	//cFile::Close(f);
-	if (!f.Read(settings, 6 * 94))//tesRead != 6 * 94)
+	if (!f.Read(settings, 6 * 94))
 	{
 		cConsole::WriteLine<COLOR_RED>("Could not reload settings file.");
 		cConsole::WriteLine("Invalid size of settings file.");
 		return;
 	}
-	f.Close();
 	Backup();
 	
 	/* Print confirmation message */
@@ -172,7 +164,6 @@ bool cEnigma::Initialize()
 	srand(static_cast<unsigned int>(time(nullptr)));
 	
 	/* Try to open settings file */
-	//file f = cFile::Open("enigma.set", cFile::OpenRead);
 	cIFile f("enigma.set");
 	if (!f)
 	{
@@ -181,15 +172,12 @@ bool cEnigma::Initialize()
 	}
 	
 	/* Settings file is open, so we simply load it */
-	//auto bytesRead = cFile::Read(f, settings, 6 * 94);
-	//cFile::Close(f);
-	if (!f.Read(settings, 6 * 94))//bytesRead != 6 * 94)
+	if (!f.Read(settings, 6 * 94))
 	{
 		cConsole::WriteLine<COLOR_RED>("Could not initialize Enigma.");
 		cConsole::WriteLine("Invalid size of settings file.");
 		return false;
 	}
-	f.Close();
 	Backup();
 	
 	/* Print confirmation message */
