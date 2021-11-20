@@ -1,8 +1,13 @@
 #include "Enigma.h"
 #include "EnigmaIO.h"
-
+#include "Enigma2.h"
+#include <iostream>
 int main()
 {
+#if 1
+	int v = cEnigma2::Initialize();//("test", "test2");
+	std::cout << v << std::endl;
+#else
 	/* Using a lambda for convenience */
 	auto ShowHelpHint = []() {
 		cConsole::Write<COLOR_DEFAULT>("Type ");
@@ -88,5 +93,7 @@ int main()
 			cConsole::NewLine();
 		}
 	}
+	return 0;
+#endif
 	return 0;
 }
