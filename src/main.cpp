@@ -1,11 +1,11 @@
-#include "Enigma.h"
-#include "EnigmaIO.h"
+//#include "Enigma.h"
+//#include "EnigmaIO.h"
 #include "Enigma2.h"
 #include <iostream>
 int main()
 {
 #if 1
-	int v = cEnigma2::Initialize();//("test", "test2");
+	int v = cEnigma2::Initialize(nullptr);//("test", "test2");
 	std::cout << v << std::endl;
 #else
 	/* Using a lambda for convenience */
