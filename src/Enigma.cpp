@@ -110,14 +110,12 @@ bool cEnigma::CreateSettings()
 	cOFile f("enigma.set");
 	if (!f)
 	{
-		cConsole::WriteLine<COLOR_RED>("Could not initialize Enigma.");
-		cConsole::WriteLine("Unable to create settings file.");
+		cConsole::Write(COLOR_RED, "Could not initialize Enigma.\n", "Unable to create settings file.\n");
 		return false;
 	}
 	if (!f.Write(settings, 6 * 94))
 	{
-		cConsole::WriteLine<COLOR_RED>("Could not initialize Enigma.");
-		cConsole::WriteLine("Creating settings file was interrupted.");
+		cConsole::Write(COLOR_RED, "Could not initialize Enigma.\n", "Creating settings file was interrupted.\n");
 		
 		/* Delete faulty file */
 		cFile::Delete("enigma.set");
@@ -126,8 +124,7 @@ bool cEnigma::CreateSettings()
 	Backup();
 	
 	/* Print confirmation message */
-	cConsole::Write<COLOR_GREEN>("Settings file ");
-	cConsole::WriteLine("created.");
+	cConsole::Write(COLOR_GREEN, "Settings file ", "created.\n");
 	
 	return true;
 }
@@ -138,24 +135,20 @@ void cEnigma::ReloadSettings()
 	cIFile f("enigma.set");
 	if (!f)
 	{
-		cConsole::WriteLine<COLOR_RED>("Could not reload settings file.");
-		cConsole::Write("Settings file ");
-		cConsole::WriteLine("is missing.");
+		cConsole::Write(COLOR_RED, "Could not reload settings file.\n", "Settings file ", "is missing.\n");
 		return;
 	}
 	
 	/* Load contents */
 	if (!f.Read(settings, 6 * 94))
 	{
-		cConsole::WriteLine<COLOR_RED>("Could not reload settings file.");
-		cConsole::WriteLine("Invalid size of settings file.");
+		cConsole::Write(COLOR_RED, "Could not reload settings file.\n", "Invalid size of settings file.\n");
 		return;
 	}
 	Backup();
 	
 	/* Print confirmation message */
-	cConsole::Write<COLOR_GREEN>("Settings file ");
-	cConsole::WriteLine("reloaded.");
+	cConsole::Write(COLOR_GREEN, "Settings file ", "reloaded.\n");
 }
 
 bool cEnigma::Initialize()
@@ -174,15 +167,13 @@ bool cEnigma::Initialize()
 	/* Settings file is open, so we simply load it */
 	if (!f.Read(settings, 6 * 94))
 	{
-		cConsole::WriteLine<COLOR_RED>("Could not initialize Enigma.");
-		cConsole::WriteLine("Invalid size of settings file.");
+		cConsole::Write(COLOR_RED, "Could not initialize Enigma.\n", "Invalid size of settings file.\n");
 		return false;
 	}
 	Backup();
 	
 	/* Print confirmation message */
-	cConsole::Write<COLOR_GREEN>("Settings file ");
-	cConsole::WriteLine("loaded.");
+	cConsole::Write(COLOR_GREEN, "Settings file ", "loaded.\n");
 	return true;
 }
 
@@ -197,7 +188,8 @@ void cEnigma::Reset()
 
 void cEnigma::PrintHelp()
 {
-	cConsole::NewLine();
+	cConsole::Write('\n');
+#if 0
 	cConsole::WriteLine<COLOR_BLUE>("Commands:");
 	cConsole::Write<COLOR_YELLOW>("  ~h ~H");
 	cConsole::WriteLine<COLOR_DEFAULT>("    Show help menu");
@@ -207,4 +199,5 @@ void cEnigma::PrintHelp()
 	cConsole::WriteLine<COLOR_DEFAULT>("    Create a new settings file");
 	cConsole::Write<COLOR_YELLOW>("  ~q ~Q");
 	cConsole::WriteLine<COLOR_DEFAULT>("    Quit");
+#endif
 }
